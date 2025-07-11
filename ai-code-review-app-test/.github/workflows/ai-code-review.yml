@@ -29,6 +29,13 @@ jobs:
             exit 0  # or use `exit 78` to mark the job as skipped
           }
 
+          # Check if a merge base exists between the base branch and HEAD
+          $mergeBase = git merge-base origin/$BASE_REF HEAD
+          if (-not $mergeBase) {
+            Write-Host "No merge base between origin/$BASE_REF and HEAD. Exiting gracefully."
+            exit 78
+          }
+
           git fetch origin $BASE_REF
           git diff origin/$BASE_REF...HEAD -- '*.ts' '*.html' '*.scss' | Out-File -Encoding utf8 pr.diff
 
@@ -44,7 +51,7 @@ jobs:
           decoded_diff=$(echo "${{ steps.diff.outputs.DIFF }}" | base64 -d)
           prompt_template=$(cat <<'PROMPT' You are a senior Angular/TypeScript reviewer.  Identify bugs, missing unit tests, performance issues, and accessibility concerns. Respond in GitHub-flavored Markdown bullets. PROMPT)
           # Combine system prompt + diff in a safe way for jq
-          payload=$(jq -n --arg m "codellama:7b" 
+          payload=$(jq -n --arg m "gemma:2b" 
                            --arg p "$prompt_template" 
                            --arg d "$decoded_diff" 
                            '{model:$m, prompt:($p + "\n\n----- DIFF START -----\n" + $d + "\n----- DIFF END -----")}')
