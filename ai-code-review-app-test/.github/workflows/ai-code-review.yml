@@ -44,7 +44,7 @@ jobs:
           decoded_diff=$(echo "${{ steps.diff.outputs.DIFF }}" | base64 -d)
           prompt_template=$(cat <<'PROMPT' You are a senior Angular/TypeScript reviewer.  Identify bugs, missing unit tests, performance issues, and accessibility concerns. Respond in GitHub-flavored Markdown bullets. PROMPT)
           # Combine system prompt + diff in a safe way for jq
-          payload=$(jq -n --arg m "codellama:7b" 
+          payload=$(jq -n --arg m "gemma:2b" 
                            --arg p "$prompt_template" 
                            --arg d "$decoded_diff" 
                            '{model:$m, prompt:($p + "\n\n----- DIFF START -----\n" + $d + "\n----- DIFF END -----")}')
